@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+    <input type='text' id='str' value='ababaab'></input>
+    <br />
+    <button onclick="button_click()">
+        Click Me!
+    </button>
+    <br />
+    <div style="overflow:hidden; margin: 0 auto; width:512px;">
+    <textarea id='output' rows = 10 cols = 30 style="font-size:40px;border:0px;"></textarea>
+    </div>
+    <br />
+    <link rel="stylesheet" type="text/css" href="./index.css">
+    <script src="./d3.min.js"></script>
+
+
+    <script>
+        function lcp(a, b) {
+            var n = Math.min(a.length, b.length);
+            for (var i = 0; i < n; i++) {
+                if (a[i] != b[i]) return i;
+            }
+            return n;
+        }
+        function button_click() {
+            var s = document.getElementById('str').value
+            var strs = []
+            for (var i = 0; i < s.length; i++) strs.push(s.substring(i))
+            strs.sort(function(a, b) {
+                return a < b? -1 : 1;
+            })
+            
+            var rt = s + '\n';
+            for (var i = 0; i < s.length; i++) {
+                if (i == 0) rt += "          ";
+                else rt += "ht" + "[" + (i+1) + "]=" + lcp(strs[i], strs[i - 1]) + "   ";
+                rt += " " + s.length - strs[i].length + 1 + " ";
+                rt += strs[i];
+                rt += '\n';
+            }
+            document.getElementById('output').value = rt
+
+        }
+        button_click()
+    </script>
+</body>

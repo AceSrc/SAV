@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+    <input type='text' id='str' value='abcb'></input>
+    
+    <br />
+    <button onclick="button_click()">
+        Click Me!
+    </button>
+    <link rel="stylesheet" type="text/css" href="./index.css">
+    <script src="./d3.min.js"></script>
+    <script src="util.js"></script>
+    <script src="./index.js"></script> 
+
+
+    <script>
+        function build_trie(strs) {
+            var root = {children: {}, info: null}
+
+            for (var i = 0; i < strs.length; i++) {
+                trie_insert(root, strs[i], '')
+            }
+
+            place_node(root, width, height, border)
+            var nodes = flatten(root)
+            var edges = link_trie_edge(root)
+            return [nodes, edges]
+        }
+
+        function link_fail_tree_edge(root) {
+            var rt = []
+            var real_root = root
+            function recurse(root, s) {
+                root.node_ref.info.text = root.node_ref.info.text.split('').reverse().join('')
+                root.node_ref.info.classes += ' constant'
+                for (var i in root.children) {
+                    var p = root.children[i]
+                    rt.push({
+                        'source': p.node_ref,
+                        'target': root.node_ref,
+                        'classes': 'optionaledge constant',
+                        'controlx': (root.x + p.x) / 2,
+                        'controly': (root.y + p.y) / 2,
+                        'info': {
+                            'classes': 'keyinfo',
+                            'text': ''
+                        }
+                    })
+                    recurse(p, s + i)
+                }
+                {
+                    for (var i = 0; i < 26; i++) {
+                        var ch = String.fromCharCode((97 + i))
+                        var p = trie_query(real_root, ch + s)
+                        if (p) {
+                            rt.push({
+                                'source': root.node_ref,
+                                'target': p.node_ref,
+                                'classes': 'keyedge',
+                                'controlx': root.x,//(root.x + p.x) / 2 + (root.y - p.y) / 2 + 10,
+                                'controly': p.y,//(root.y + p.y) / 2 - (root.x - p.x) / 2 + 10,
+                                'info': {
+                                    'classes': 'keyinfo',
+                                    'text': ch
+                                }
+                            })
+                        }
+                    }
+                }
+            }
+            recurse(root, '')
+            return rt
+        }
+
+        function build_fail_tree(strs) {
+            var root = {children: {}, info: null}
+
+            for (var i = 0; i < strs.length; i++) {
+                trie_insert(root, strs[i], '')
+            }
+
+            place_node(root, width, height, border)
+            var nodes = flatten(root)
+            var edges = link_fail_tree_edge(root)
+            return [nodes, edges, root]
+        }
+
+        function merge_fail_tree(root) {
+            function merge(u) {
+                if (!(u.keypoint || Object.keys(u.children).length > 1)) {
+                    // console.log(u.children)
+                    u.notshow = true
+                    u.node_ref.classes += ' invisible'
+                    u.node_ref.invisible = true
+                }
+                for (var p in u.children) 
+                    merge(u.children[p])
+            }
+            var nodes = flatten(root)
+            merge(root)
+            var edges = link_fail_tree_edge(root)
+            return [nodes, edges]
+        }
+
+        function button_click() {
+            var infos = []
+
+            var s = document.getElementById('str').value
+            var strs = []
+            for (var i = 0; i < s.length; i++) strs.push(s.substring(i))
+            infos.push(build_trie(strs))
+
+            strs = []
+            for (var i = 0; i < s.length; i++) strs.push(s.substring(0, i + 1).split("").reverse().join(""))
+            infos.push(build_fail_tree(strs))
+
+            infos.push(merge_fail_tree(infos[1][2]))
+
+            d3.selectAll("svg").data([]).exit().remove()
+            var svg = d3.selectAll("svg")
+                .data([2])
+                .enter()
+                    .append("svg")
+                    .attr("width", total_width)
+                    .attr("height", total_height)
+                    .classed('canvas', function(d) {
+                        draw(d3.select(this), infos[d][0], infos[d][1])
+                        return true
+                    })
+            svg.exit().remove()
+        }
+        button_click()
+    </script>
+</body>

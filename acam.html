@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+    <textarea rows="5" cols="8" id='strs'>
+abaca
+abacb
+aca
+acaca
+cbab</textarea>
+    
+    <br />
+    <button onclick="button_click()">
+        Click Me!
+    </button>
+    <link rel="stylesheet" type="text/css" href="./index.css">
+    <script src="./d3.min.js"></script>
+    <script src="util.js"></script>
+    <script src="./index.js"></script> 
+
+
+    <script>
+        function button_click() {
+            root = {children: {}, info: null}
+            strs = document.getElementById('strs').value.split('\n')
+            
+            console.log(strs)
+
+            for (var i = 0; i < strs.length; i++) {
+                trie_insert(root, strs[i], '')
+            }
+
+            place_node(root, width, height, border)
+            nodes = flatten(root)
+            edges = link_trie_edge(root)
+
+            var svg = d3.select("svg")
+                .data([]).exit().remove()
+
+            var svg = d3.select("svg")
+                .data([0])
+                .enter()
+                    .append("svg")
+                    .attr("width", total_width)
+                    .attr("height", total_height)
+            svg.exit().remove()
+            draw(svg, nodes, edges)
+        }
+        button_click()
+    </script>
+</body>

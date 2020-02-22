@@ -1,0 +1,59 @@
+#keyedgearrow,.keyedge {
+    fill: #006699;
+    stroke: #006699;
+}
+
+#optionaledgearrow,.optionaledge {
+    fill: #FF9966;
+    stroke: #FF9966;
+}
+
+.keynode {
+    fill: #99CCCC;
+    r: 5;
+}
+
+.keynode.showed {
+    fill: #FF6666;
+    r: 5;
+}
+
+.keyedge {
+    opacity: 0;
+    fill: none;
+}
+
+.optionaledge {
+    opacity: 0;
+    fill: none;
+    stroke-dasharray: 5;
+}
+
+.nodeinfo {
+    opacity: 0;
+    fill: gray;
+}
+
+.edgeinfo {
+    opacity: 0;
+}
+
+.keyinfo {
+    opacity: 0;
+}
+
+.showed {
+    opacity: 1;
+}
+
+.constant {
+    opacity: 1;
+}
+
+.invisible {
+    opacity: 0;
+}
+
+.showed.halfinvisible {
+    opacity: 0;
+}
