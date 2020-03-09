@@ -59,6 +59,7 @@ function place_node(root, width, height, border) {
 function flatten(root) {
     var rt = []
     function recurse(root) {
+        // console.log(root.info)
         rt.push({
             'x': root.x,
             'y': root.y,

@@ -118,7 +118,7 @@
 
             d3.selectAll("svg").data([]).exit().remove()
             var svg = d3.selectAll("svg")
-                .data([2])
+                .data([0, 1, 2])
                 .enter()
                     .append("svg")
                     .attr("width", total_width)

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+    <input type='text' id='str' value='bacaacaa'></input>
+    
+    <br />
+    <button onclick="button_click()">
+        Click Me!
+    </button>
+    <link rel="stylesheet" type="text/css" href="./index.css">
+    <script src="./d3.min.js"></script>
+    <script src="util.js"></script>
+    <script src="./index.js"></script> 
+
+
+    <script>
+        function ptrie_insert(root, s, is_odd) {
+            // console.log(s, is_odd)
+            root.keypoint = true
+            var info = ''
+            for (var i = 0; i < s.length; i++) {
+                if (!root.children[ s[i] ]) root.children[ s[i] ] = {children: {}, info: ''}
+                root = root.children[ s[i] ];
+                if (is_odd && i == 0) info = s[i]
+                else {
+                    info = s[i] + info + s[i];
+                }
+                root.info = info// + ':' + info.length
+            }
+            root.keypoint = true
+        }
+
+        function is_pal(s) {
+            for (var i = 0; i < s.length; i++) 
+                if (s[i] != s[s.length - i - 1]) return false;
+            return true;
+        }
+
+        function link_ptrie_edge(odd_root, even_root) {
+            var rt = []
+            function recurse(root, s) {
+                root.node_ref.info.text = root.info
+                root.node_ref.info.classes += ' constant'
+                for (var i in root.children) {
+                    var p = root.children[i]
+                    rt.push({
+                        'source': root.node_ref,
+                        'target': p.node_ref,
+                        'classes': 'keyedge constant',
+                        'controlx': (root.x + p.x) / 2,
+                        'controly': (root.y + p.y) / 2,
+                        'info': {
+                            'classes': 'keyinfo constant',
+                            'text': i
+                        }
+                    })
+                    recurse(p, s + i)
+                }
+                {
+                    var s = root.info
+                    // console.log(s)
+                    if (!s) return 
+                    for (var i = 1; i <= s.length; i++) {
+                        var ss = s.substr(i)
+                        if (is_pal(ss)) {
+                            var p = null
+                            if (ss.length % 2 == 0) {
+                                // if (ss.length == 0) console.log(ss.substr(ss.length / 2))
+                                p = trie_query(even_root, ss.substr(ss.length / 2))
+                                // if (ss.length == 0) console.log(even_root, p)
+                            }
+                            else {
+                                // if (s == 'aa' && ss == 'a') console.log((ss.length + 1) / 2 - 1, ss.substr((ss.length + 1) / 2 - 1))
+                                p = trie_query(odd_root, ss.substr((ss.length + 1) / 2 - 1))
+                            }
+                            if (p) {
+                                var X = (root.x + p.x) / 2
+                                var Y = (root.y + p.y) / 2
+                                X = (root.x + p.x) / 2 + (root.y - p.y) / 4 + 10, Y = (root.y + p.y) / 2 - (root.x - p.x) / 4 + 10
+                                rt.push({
+                                    'source': root.node_ref,
+                                    'target': p.node_ref,
+                                    'classes': 'optionaledge',
+                                    'controlx': X,
+                                    'controly': Y,
+                                    'info': {
+                                        'classes': 'optionalinfo',
+                                        'text': ''
+                                    }
+                                })
+                                break
+                            }       
+                        }
+                    }
+                }
+            }
+            recurse(odd_root, '')
+            recurse(even_root, '')
+            rt.push({
+                'source': even_root.node_ref,
+                'target': odd_root.node_ref,
+                'classes': 'optionaledge',
+                'controlx': even_root.x,
+                'controly': odd_root.y,
+                'info': {
+                    'classes': 'optionalinfo',
+                    'text': ''
+                }
+            })
+            return rt
+        }
+
+        function build_ptrie(s) {
+            var odd_root = {children: {}, info: 'odd:-1'}
+            var even_root = {children: {}, info: 'even:0'}
+
+            for (var i = 0; i < s.length; i++) {
+                for (var j = 0; j <= i; j++) {
+                    var ss = s.substr(j, i - j + 1)
+                    if (is_pal(ss)) {
+                        if (ss.length % 2 == 0) ptrie_insert(even_root, ss.substr(ss.length / 2), false)
+                        else ptrie_insert(odd_root, ss.substr((ss.length + 1) / 2 - 1), true)
+                    }
+                }
+            }
+            var root = {children: {'odd': odd_root, 'even': even_root}, info: 'virtual_root'}
+            place_node(root, width, height, border)
+            
+            var dy = odd_root.y - root.y
+            function recurse(root) {
+                root.y -= dy
+                for (var i in root.children) recurse(root.children[i])
+            }
+            recurse(root)
+
+            var nodes = flatten(root)
+            var edges = link_ptrie_edge(odd_root, even_root)
+            return [nodes, edges]
+        }
+
+        function button_click() {
+            var infos = []
+
+            var s = document.getElementById('str').value
+            var info = build_ptrie(s)
+
+            d3.selectAll("svg").data([]).exit().remove()
+            var svg = d3.selectAll("svg")
+                .data([0])
+                .enter()
+                    .append("svg")
+                    .attr("width", total_width)
+                    .attr("height", total_height)
+                    .classed('canvas', function(d) {
+                        draw(d3.select(this), info[0], info[1])
+                        return true
+                    })
+            svg.exit().remove()
+        }
+        button_click()
+    </script>
+</body>
